@@ -2,14 +2,13 @@
 import os
 from datetime import datetime, timedelta
 
-import matplotlib.pyplot as plt
 import pandas as pd
 
 from helpers import load_tables
 
 ##* loading all 7 tabels into a dictionary 'alerts', 'assessment_assignments',
 ##*'clinics', 'fact_patient_day', 'patients', 'providers', 'rtm_monthly'
-tables = load_tables("data")
+tables = load_tables("data/raw")
 tables.keys()
 for name, table in tables.items():
     print(f"{name},  {table.shape}")
