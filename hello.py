@@ -1,13 +1,11 @@
-print("this is a print for git test 1")
 #! ----- import requests
-from datetime import datetime, timedelta
-import pandas as pd
-import matplotlib.pyplot as plt
 import os
-import jason
-from pathlib import Path
-from helpers import load_tables
+from datetime import datetime, timedelta
 
+import matplotlib.pyplot as plt
+import pandas as pd
+
+from helpers import load_tables
 
 ##* loading all 7 tabels into a dictionary 'alerts', 'assessment_assignments',
 ##*'clinics', 'fact_patient_day', 'patients', 'providers', 'rtm_monthly'
@@ -24,14 +22,11 @@ patients = tables["patients"]
 providers = tables["providers"]
 rtm_monthly = tables["rtm_monthly"]
 
-#! analyzyg d types
+#! analyzyg data types
 for name, table in tables.items():
     print(f"{name} dtypes:\n{table.dtypes}\n")
 
-
-##
-## looking particlary on date colums
-
+#!looking particlary on date colums
 print("BEFORE dtypes:")
 print(
     "patients:",
@@ -40,66 +35,35 @@ print(
 print("day:", day[["date"]].dtypes.to_dict())
 print("assign:", assign[["assigned_ts", "completed_ts"]].dtypes.to_dict())
 print("alerts:", alerts[["created_ts", "ack_ts"]].dtypes.to_dict())
-## transfaring date columns to datetime type
+#!seems all the date columns are object dtypes
+# * converting date columns to datetime dtype
+date_columns = [
+    (patients, ["enrollment_date", "install_date", "first_data_date"]),
+    (day, ["date"]),
+    (assign, ["assigned_ts", "completed_ts"]),
+    (alerts, ["created_ts", "ack_ts"]),
+]
+for table, cols in date_columns:
+    table[cols] = table[cols].apply(pd.to_datetime, errors="coerce", cache=True)
+#! rechecking dtypes after conversion
+print("AFTER dtypes:")
+print("day:", day[["date"]].dtypes.to_dict())
+print("assign:", assign[["assigned_ts", "completed_ts"]].dtypes.to_dict())
+print("alerts:", alerts[["created_ts", "ack_ts"]].dtypes.to_dict())
 
+#! saving cleaned data
+cleaned_data_dir = os.path.join("data", "cleaned data")
+os.makedirs(cleaned_data_dir, exist_ok=True)
+for name, table in tables.items():
+    table.to_csv(os.path.join(cleaned_data_dir, f"{name}.csv"), index=False)
 
-#!-------------------- fetching data from open meteo api
-# Calculate dates
-today = datetime.now()
-week_ago = today - timedelta(days=7)
+# todo: further analysis and visualization can be added here
 
-# Format dates for API (YYYY-MM-DD)
-start_date = week_ago.strftime("%Y-%m-%d")
-end_date = today.strftime("%Y-%m-%d")
+print("\nParse quality:")
 
-# Get Paris weather for past week
-url = f"https://api.open-meteo.com/v1/forecast?latitude=32.088472&longitude=34.821614&start_date={start_date}&end_date={end_date}&daily=temperature_2m_max,temperature_2m_min"
-
-response = requests.get(url)
-data = response.json()
-daily_data = data["daily"]
-print(daily_data)
-
-#!-------------------- transfering data to pd data frame
-df = pd.DataFrame(
-    {
-        "date": daily_data["time"],
-        "temp_max": daily_data["temperature_2m_max"],
-        "temp_min": daily_data["temperature_2m_min"],
-    }
+print(
+    "patients first_data_date NaT%:",
+    round(patients["first_data_date"].isna().mean() * 100, 2),
 )
-
-df["date"] = pd.to_datetime(df["date"])
-print(df)
-
-# * plotting the data
-import matplotlib.pyplot as plt
-
-# Create the plot
-plt.figure(figsize=(10, 6))
-plt.plot(df["date"], df["temp_max"], marker="o", label="Max Temp")
-plt.plot(df["date"], df["temp_min"], marker="o", label="Min Temp")
-
-# Add labels and title
-plt.xlabel("Date")
-plt.ylabel("Temperature (°C)")
-plt.title("Ramat Gan Weather - Past 7 Days")
-plt.legend()
-
-# Rotate x-axis labels for readability
-plt.xticks(rotation=45)
-plt.tight_layout()
-
-# Save the plot
-plt.savefig("weather_chart.png")
-plt.show()
-
-
-if not os.path.exists("data"):
-    os.makedirs("data")
-
-plt.savefig("data/weather_chart.png")
-df.to_csv("data/paris_weather.csv", index=False)
-
-
-print(f"Average temperature: {df['avg_temp'].mean():.1f}°C")
+print("day date NaT%:", round(day["date"].isna().mean() * 100, 2))
+print("day range:", day["date"].min() - day["date"].max())

@@ -28,3 +28,6 @@ output/
 *.log
 .env
 .env.*
+
+# Data
+data/
