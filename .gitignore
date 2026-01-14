@@ -17,6 +17,7 @@ ENV/
 
 # IDEs/editors
 .vscode/
+*.code-workspace
 
 # OS
 .DS_Store

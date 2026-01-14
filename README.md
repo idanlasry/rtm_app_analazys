@@ -1,6 +1,6 @@
 # Step App Analysis
 
-A data analysis project for OneStep RTM (Remote Therapeutic Monitoring) engagement tracking and clinic operations analysis.
+A data analysis project for RTM (Remote Therapeutic Monitoring) engagement tracking and clinic operations analysis.
 
 ## Project Overview
 
