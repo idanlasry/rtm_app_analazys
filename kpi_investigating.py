@@ -62,6 +62,7 @@ print(
 ## saving processed data
 patient_day.to_csv(OUT / "fact_patient_day.csv", index=False)
 
+
 ##! creating a patient funnel enrollment -> installing -> active usage kpis-> churn
 # last active date per patient (based on is_active_day == 1)
 last_active = (
@@ -103,7 +104,7 @@ patient_funnel["is_7_active"] = (patient_funnel["active_days_first_14"] >= 7).as
 patient_funnel["is_16of30"] = (patient_funnel["active_days_first_30"] >= 16).astype(int)
 
 patient_funnel["days_since_last_active"] = (
-    as_of_date - patient_funnel["last_active_date"].dt.normalize()
+    -patient_funnel["last_active_date"].dt.normalize()
 ).dt.days
 
 # eligibility flags
