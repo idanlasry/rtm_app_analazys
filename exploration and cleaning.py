@@ -23,6 +23,31 @@ patients = tables["patients"]
 providers = tables["providers"]
 rtm_monthly = tables["rtm_monthly"]
 
+## updating clinic names with descriptive names
+clinic_names_map = {
+    "C001": "Sunrise Physical Therapy",
+    "C002": "Evergreen Rehabilitation Center",
+    "C003": "Summit Health Partners",
+    "C004": "Coastal Wellness Clinic",
+    "C005": "Maple Grove Medical",
+    "C006": "Horizon Recovery Institute",
+}
+clinics["clinic_name"] = clinics["clinic_id"].map(clinic_names_map)
+
+## updating clinic regions with US states
+clinic_regions_map = {
+    "C001": "Florida",
+    "C002": "Washington",
+    "C003": "Colorado",
+    "C004": "California",
+    "C005": "Minnesota",
+    "C006": "Arizona",
+}
+clinics["region"] = clinics["clinic_id"].map(clinic_regions_map)
+
+print("Updated clinics:")
+print(clinics)
+
 ## analyzyg data types
 for name, table in tables.items():
     print(f"{name} dtypes:\n{table.dtypes}\n")
@@ -78,3 +103,12 @@ print(
 print("day date NaT%:", round(day["date"].isna().mean() * 100, 2))
 print("day range:", day["date"].min() - day["date"].max())
 ############# finish looking particlary on date colums####################
+# todo: check if there are patients with no clinics assigned
+clinic_ids = pd.Index(clinics["clinic_id"])
+unassigned_clinic_mask = patients["clinic_id"].isna() | ~patients["clinic_id"].isin(
+    clinic_ids
+)
+print(
+    "patients with no clinics assigned:",
+    int(unassigned_clinic_mask.sum()),
+)

@@ -16,10 +16,14 @@ patient_day = pd.read_csv(
 )
 patient_day["date"] = pd.to_datetime(patient_day["date"], errors="coerce")
 
-# Use the latest date in the data as the anchor for the last-7-days window.
+# Use the latest valid date as the anchor for the last-7-days window.
+# If all dates are missing, fall back to a mask that selects no rows.
 as_of_date = patient_day["date"].max()
-recent_start = as_of_date - pd.Timedelta(days=6)
-recent_mask = patient_day["date"].between(recent_start, as_of_date)
+if pd.isna(as_of_date):
+    recent_mask = pd.Series(False, index=patient_day.index)
+else:
+    recent_start = as_of_date - pd.Timedelta(days=6)
+    recent_mask = patient_day["date"].between(recent_start, as_of_date)
 
 patient_metrics = (
     patient_day.groupby("patient_id")
@@ -35,7 +39,9 @@ recent_metrics = (
     patient_day.loc[recent_mask]
     .groupby("patient_id")
     .agg(
+        # Any activity in the last 7 days counts the patient as active.
         is_active_last_7d=("is_active_day", lambda s: (s == 1).any()),
+        # Flag if the patient exceeds the fall risk threshold in the window.
         is_high_fall_risk_last_7d=(
             "fall_risk_score",
             lambda s: (s > FALL_RISK_THRESHOLD).any(),
@@ -50,9 +56,9 @@ patient_metrics = patients.merge(patient_metrics, on="patient_id", how="left").m
 patient_metrics[["avg_steps", "active_days", "max_fall_risk"]] = patient_metrics[
     ["avg_steps", "active_days", "max_fall_risk"]
 ].fillna(0)
-patient_metrics[["is_active_last_7d", "is_high_fall_risk_last_7d"]] = patient_metrics[
-    ["is_active_last_7d", "is_high_fall_risk_last_7d"]
-].fillna(False)
+patient_metrics[["is_active_last_7d", "is_high_fall_risk_last_7d"]] = (
+    patient_metrics[["is_active_last_7d", "is_high_fall_risk_last_7d"]].fillna(False)
+)
 # High fall-risk patients must also be active in the last 7 days.
 patient_metrics["is_high_fall_risk_last_7d"] = (
     patient_metrics["is_active_last_7d"] & patient_metrics["is_high_fall_risk_last_7d"]

@@ -1,6 +1,4 @@
 ##! this is a helper file gathering usfull functions for the analazys in this project
-
-
 from pathlib import Path
 import pandas as pd
 
