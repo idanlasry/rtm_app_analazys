@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 from helpers import load_tables
 
 # Load cleaned data
@@ -7,6 +8,7 @@ tables = load_tables("data/cleaned data")
 # Unpack tables
 patients = tables["patients"]
 fact_patient_day = tables["fact_patient_day"]
+clinics = tables["clinics"]
 
 # Convert date column to datetime
 fact_patient_day["date"] = pd.to_datetime(fact_patient_day["date"])
@@ -154,6 +156,90 @@ if len(enrollments_per_biweek) > 1:
             pct_change = row["pct_change"]
             sign = "+" if change > 0 else ""
             print(f"   Period {biweek_str}: {sign}{change} ({sign}{pct_change:.1f}%)")
+
+print()
+print("=" * 60)
+
+# ============================================================================
+# ACTIVE DAYS METRICS
+# ============================================================================
+
+print("\n" + "=" * 60)
+print("ACTIVE DAYS METRICS (December 2025)")
+print("=" * 60)
+
+# 1. Total Active Days Rate
+# Rate of active days out of all patient-days in December
+total_patient_days = len(december_activity)
+total_active_days = december_activity["is_active_day"].sum()
+active_days_rate = (total_active_days / total_patient_days * 100) if total_patient_days > 0 else 0
+
+print("\n1. Total Active Days Rate:")
+print(f"   - Total Patient-Days: {total_patient_days:,}")
+print(f"   - Active Days: {total_active_days:,}")
+print(f"   - Active Days Rate: {active_days_rate:.2f}%")
+
+# 2. Active Days Rate by Clinic
+# Merge clinic info with activity data
+december_with_clinic = december_activity.merge(
+    clinics[["clinic_id", "clinic_name"]], on="clinic_id", how="left"
+)
+
+clinic_active_rate = (
+    december_with_clinic.groupby(["clinic_id", "clinic_name"])
+    .agg(
+        total_days=("is_active_day", "count"),
+        active_days=("is_active_day", "sum"),
+    )
+    .reset_index()
+)
+clinic_active_rate["active_rate"] = (
+    clinic_active_rate["active_days"] / clinic_active_rate["total_days"] * 100
+)
+clinic_active_rate = clinic_active_rate.sort_values("active_rate", ascending=False)
+
+print("\n2. Active Days Rate by Clinic:")
+for _, row in clinic_active_rate.iterrows():
+    print(
+        f"   - {row['clinic_name']}: {row['active_rate']:.2f}% "
+        f"({row['active_days']:,}/{row['total_days']:,} days)"
+    )
+
+# 3. Patient Active Days Distribution (Graph)
+# Count active days per patient in December
+patient_active_days_dec = (
+    december_activity[december_activity["is_active_day"] == 1]
+    .groupby("patient_id")
+    .size()
+    .reset_index(name="active_days")
+)
+
+# Include patients with 0 active days
+all_patients_dec = december_activity[["patient_id"]].drop_duplicates()
+patient_active_days_dec = all_patients_dec.merge(
+    patient_active_days_dec, on="patient_id", how="left"
+).fillna(0)
+
+print("\n3. Patient Active Days Distribution:")
+print(f"   - Mean Active Days: {patient_active_days_dec['active_days'].mean():.1f}")
+print(f"   - Median Active Days: {patient_active_days_dec['active_days'].median():.1f}")
+print(f"   - Min Active Days: {int(patient_active_days_dec['active_days'].min())}")
+print(f"   - Max Active Days: {int(patient_active_days_dec['active_days'].max())}")
+
+# Create histogram
+plt.figure(figsize=(10, 6))
+plt.hist(patient_active_days_dec["active_days"], bins=range(0, 33), edgecolor="black", alpha=0.7)
+plt.axvline(x=16, color="red", linestyle="--", label="Billing Threshold (16 days)")
+plt.xlabel("Active Days in December")
+plt.ylabel("Number of Patients")
+plt.title("Patient Active Days Distribution (December 2025)")
+plt.legend()
+plt.grid(axis="y", alpha=0.3)
+plt.tight_layout()
+plt.savefig("output/patient_active_days_distribution.png", dpi=150)
+plt.show()
+
+print("\n   Graph saved to: output/patient_active_days_distribution.png")
 
 print()
 print("=" * 60)

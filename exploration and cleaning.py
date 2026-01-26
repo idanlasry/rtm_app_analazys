@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from helpers import load_tables
+from config import load_tables
 
 ##* loading all 7 tabels into a dictionary 'alerts', 'assessment_assignments',
 ##*'clinics', 'fact_patient_day', 'patients', 'providers', 'rtm_monthly'
