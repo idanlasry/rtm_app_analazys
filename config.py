@@ -28,6 +28,6 @@ ACTIVE_BIWEEK_THRESHOLD = 8  # Active days per bi-week
 FALL_RISK_THRESHOLD = 70
 FALL_RISK_LOOKBACK_DAYS = 7
 
-# Date ranges for December 2025 (full month available)
-DECEMBER_START = "2025-12-01"
-DECEMBER_END = "2026-01-01"
+# Date ranges - default to last 30 days
+DATE_END = (pd.Timestamp.today() - pd.Timedelta(days=1)).strftime("%Y-%m-%d")  # Yesterday
+DATE_START = (pd.Timestamp.today() - pd.Timedelta(days=31)).strftime("%Y-%m-%d")  # 30 days before end

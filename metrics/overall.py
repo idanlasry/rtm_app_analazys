@@ -6,8 +6,8 @@ from config import (
     BILLING_THRESHOLD,
     FALL_RISK_THRESHOLD,
     FALL_RISK_LOOKBACK_DAYS,
-    DECEMBER_START,
-    DECEMBER_END,
+    DATE_START,
+    DATE_END,
 )
 
 
@@ -18,8 +18,8 @@ def get_patient_count(patients: pd.DataFrame) -> int:
 
 def get_billable_patients(
     fact_patient_day: pd.DataFrame,
-    start_date: str = DECEMBER_START,
-    end_date: str = DECEMBER_END,
+    start_date: str = DATE_START,
+    end_date: str = DATE_END,
     threshold: int = BILLING_THRESHOLD,
 ) -> dict:
     """
@@ -61,8 +61,8 @@ def get_billable_patients(
 
 def get_active_patients(
     fact_patient_day: pd.DataFrame,
-    start_date: str = DECEMBER_START,
-    end_date: str = DECEMBER_END,
+    start_date: str = DATE_START,
+    end_date: str = DATE_END,
 ) -> dict:
     """
     Get active patients (at least 1 active day in period).

@@ -15,6 +15,7 @@ from .active_days import (
     get_total_active_rate,
     get_active_rate_by_clinic,
     get_patient_active_distribution,
+    get_active_rate_by_day_since_enrollment,
 )
 from .onboarding_funnel import (
     get_patient_funnel,

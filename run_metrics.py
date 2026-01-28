@@ -13,10 +13,15 @@ from metrics import (
     get_total_active_rate,
     get_active_rate_by_clinic,
     get_patient_active_distribution,
+    get_active_rate_by_day_since_enrollment,
     get_patient_funnel,
     print_funnel,
 )
-from visualizations import plot_active_days_distribution, plot_patient_funnel
+from visualizations import (
+    plot_active_days_distribution,
+    plot_active_rate_by_day_since_enrollment,
+    plot_patient_funnel,
+)
 
 
 def main():
@@ -45,8 +50,8 @@ def main():
     patient_count = get_patient_count(patients)
     print(f"\n1. Overall Patients Count: {patient_count:,}")
 
-    # 2. Billable patients
-    billable = get_billable_patients(fact_patient_day)
+    # 2. Billable patients december 2025
+    billable = get_billable_patients(fact_patient_day, "2025-12-01", "2026-01-01")
     print("\n2. Patients Billable in Last Month (December 2025):")
     print(
         f"   - Billable Patients: {billable['billable_count']:,} / {billable['total_patients']:,}"
@@ -54,14 +59,16 @@ def main():
     print(f"   - Billable Rate: {billable['billable_rate']:.2f}%")
 
     # 3. Active patients
-    active = get_active_patients(fact_patient_day)
-    print("\n3. Active Patients in Last Month (December 2025):")
+    active = get_active_patients(
+        fact_patient_day,
+    )
+    print("\n3. Active Patients in Last 30 days:")
     print(f"   - Active Patients: {active['active_count']:,}")
     print(f"   - Active Rate: {(active['active_count'] / patient_count * 100):.2f}%")
 
     # 4. High fall risk patients
     fall_risk = get_high_fall_risk_patients(fact_patient_day)
-    print("\n4. Patients with Fall Risk Score >= 75 (Last 7 Days):")
+    print("\n4. Patients with Fall Risk Score >= 70 (Last 7 Days):")
     print(f"   - High Fall Risk Patients: {fall_risk['high_risk_count']:,}")
     print(
         f"   - High Risk Rate: {(fall_risk['high_risk_count'] / patient_count * 100):.2f}%"
@@ -148,6 +155,20 @@ def main():
     # Create distribution plot
     output_path = plot_active_days_distribution(distribution["distribution_df"])
     print(f"\n   Graph saved to: {output_path}")
+
+    # 4. Patient active rate by day since enrollment disterbution
+
+    # Get data
+    result = get_active_rate_by_day_since_enrollment(patients, fact_patient_day)
+
+    # Print summary
+    print("\nActive Rate by Day Since Enrollment:")
+    print(f"  Mean Active Rate: {result['summary']['mean_active_rate']:.1f}%")
+    print(f"  Median Active Rate: {result['summary']['median_active_rate']:.1f}%")
+
+    # Plot
+    output_path = plot_active_rate_by_day_since_enrollment(result["distribution_df"])
+    print(f"  Graph saved to: {output_path}")
 
     # =========================================================================
     # PATIENT FUNNEL
