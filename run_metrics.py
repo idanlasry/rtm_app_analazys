@@ -19,13 +19,6 @@ from metrics import (
 from visualizations import plot_active_days_distribution, plot_patient_funnel
 
 
-def print_section(title: str) -> None:
-    """Print a section header."""
-    print("\n" + "=" * 60)
-    print(title)
-    print("=" * 60)
-
-
 def main():
     # Load cleaned data
     tables = load_tables(DATA_DIR)
@@ -44,7 +37,9 @@ def main():
     # =========================================================================
     # OVERALL METRICS REPORT
     # =========================================================================
-    print_section("OVERALL METRICS REPORT")
+    print("\n" + "=" * 60)
+    print("OVERALL METRICS REPORT")
+    print("=" * 60)
 
     # 1. Overall patients count
     patient_count = get_patient_count(patients)
@@ -53,7 +48,9 @@ def main():
     # 2. Billable patients
     billable = get_billable_patients(fact_patient_day)
     print("\n2. Patients Billable in Last Month (December 2025):")
-    print(f"   - Billable Patients: {billable['billable_count']:,} / {billable['total_patients']:,}")
+    print(
+        f"   - Billable Patients: {billable['billable_count']:,} / {billable['total_patients']:,}"
+    )
     print(f"   - Billable Rate: {billable['billable_rate']:.2f}%")
 
     # 3. Active patients
@@ -66,12 +63,16 @@ def main():
     fall_risk = get_high_fall_risk_patients(fact_patient_day)
     print("\n4. Patients with Fall Risk Score >= 75 (Last 7 Days):")
     print(f"   - High Fall Risk Patients: {fall_risk['high_risk_count']:,}")
-    print(f"   - High Risk Rate: {(fall_risk['high_risk_count'] / patient_count * 100):.2f}%")
+    print(
+        f"   - High Risk Rate: {(fall_risk['high_risk_count'] / patient_count * 100):.2f}%"
+    )
 
     # =========================================================================
     # BI-WEEKLY KPI TRENDS
     # =========================================================================
-    print_section("BI-WEEKLY KPI TRENDS (2-Week Periods)")
+    print("\n" + "=" * 60)
+    print("BI-WEEKLY KPI TRENDS (2-Week Periods)")
+    print("=" * 60)
 
     # 1. Active users per bi-week
     active_users_biweekly = get_active_users_biweekly(fact_patient_day)
@@ -81,13 +82,17 @@ def main():
 
     # Period changes
     if len(active_users_biweekly) > 1:
-        active_users_changes = calculate_period_changes(active_users_biweekly, "active_users")
+        active_users_changes = calculate_period_changes(
+            active_users_biweekly, "active_users"
+        )
         print("\n   Period-over-Period Changes:")
         for _, row in active_users_changes.iterrows():
             if pd.notna(row["change"]):
                 change = int(row["change"])
                 sign = "+" if change > 0 else ""
-                print(f"   Period {row['bi_week']}: {sign}{change} ({sign}{row['pct_change']:.1f}%)")
+                print(
+                    f"   Period {row['bi_week']}: {sign}{change} ({sign}{row['pct_change']:.1f}%)"
+                )
 
     # 2. New patient enrollments
     enrollments_biweekly = get_enrollments_biweekly(patients)
@@ -97,18 +102,24 @@ def main():
 
     # Period changes
     if len(enrollments_biweekly) > 1:
-        enrollments_changes = calculate_period_changes(enrollments_biweekly, "new_patients")
+        enrollments_changes = calculate_period_changes(
+            enrollments_biweekly, "new_patients"
+        )
         print("\n   Period-over-Period Changes:")
         for _, row in enrollments_changes.iterrows():
             if pd.notna(row["change"]):
                 change = int(row["change"])
                 sign = "+" if change > 0 else ""
-                print(f"   Period {row['bi_week']}: {sign}{change} ({sign}{row['pct_change']:.1f}%)")
+                print(
+                    f"   Period {row['bi_week']}: {sign}{change} ({sign}{row['pct_change']:.1f}%)"
+                )
 
     # =========================================================================
     # ACTIVE DAYS METRICS
     # =========================================================================
-    print_section("ACTIVE DAYS METRICS (December 2025)")
+    print("\n" + "=" * 60)
+    print("ACTIVE DAYS METRICS (December 2025)")
+    print("=" * 60)
 
     # 1. Total active days rate
     active_rate = get_total_active_rate(fact_patient_day)
@@ -141,7 +152,9 @@ def main():
     # =========================================================================
     # PATIENT FUNNEL
     # =========================================================================
-    print_section("PATIENT FUNNEL (Enrollment to Compliance)")
+    print("\n" + "=" * 60)
+    print("PATIENT FUNNEL (Enrollment to Compliance)")
+    print("=" * 60)
 
     funnel_result = get_patient_funnel(patients, fact_patient_day)
     print_funnel(funnel_result)
